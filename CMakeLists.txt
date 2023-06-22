@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.23)
-project(vscode-kernelmod-cmake VERSION 0.1 LANGUAGES C)
+project(yackm VERSION 0.1 LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
