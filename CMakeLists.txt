@@ -5,27 +5,37 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 
 # user options
-set(FULL_KERNEL_DIR "" CACHE STRING "Path to full kernel source tree")
-set(HEADER_ONLY_KERNEL_DIR "" CACHE STRING "Path to header-only kernel source tree") 
-option(FULLTREE "Use full kernel source")
-option(CLANGD "Remove compile flags that are not understood by clangd")
+set(FULL_KERNEL_DIR "/home/david/repo/linux-arch-git" CACHE STRING "Path to full kernel source tree")
+set(HEADER_ONLY_KERNEL_DIR "/usr/lib/modules/6.4.1-arch1-1/build" CACHE STRING "Path to header-only kernel source tree") 
+option(HEADER_BUILD "Use full kernel tree for compilation database and build with header-only kernel tree. \
+                     If set ON, both FULL_KERNEL_DIR and HEADER_ONLY_KERNEL_DIR have to be provided, \
+                     otherwise use HEADER_ONLY_KERNEL_DIR for both compilation database and building" ON)
+option(CLANGD "Remove compile flags that are not understood by clangd" ON)
 
 # tell cmake to generate JSON compilation database
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# set kernel source location
-if(FULLTREE)
+
+
+if(HEADER_BUILD)
     if(${FULL_KERNEL_DIR} STREQUAL "")
         message(FATAL_ERROR "No full kernel source tree provided")
     endif()
-    set(KERNELDIR ${FULL_KERNEL_DIR})
+    if(${HEADER_ONLY_KERNEL_DIR} STREQUAL "")
+        message(FATAL_ERROR "No header-only kernel source tree provided")
+    endif()
+    # compilation database tree
+    set(KERNELDIR_CD ${FULL_KERNEL_DIR})
+    # build tree
+    set(KERNELDIR_BUILD ${HEADER_ONLY_KERNEL_DIR})
 else()
     if(${HEADER_ONLY_KERNEL_DIR} STREQUAL "")
         message(FATAL_ERROR "No header-only kernel source tree provided")
     endif()
-    set(KERNELDIR ${HEADER_ONLY_KERNEL_DIR})
+    set(KERNELDIR_BUILD ${HEADER_ONLY_KERNEL_DIR})
+    set(KERNELDIR_CD ${KERNELDIR_BUILD})
 endif()
-message(STATUS "Kernel source in use: ${KERNELDIR}")
+
     
 
 ### start of Kbuild generation ###
@@ -87,7 +97,7 @@ module_init(hello_start);
 module_exit(hello_end);  
 ")
 file(WRITE ${DUMMY_MODULE_DIR}/Kbuild "obj-m := dummy_mod.o")
-execute_process(COMMAND make -C ${KERNELDIR} M=${DUMMY_MODULE_DIR} RESULT_VARIABLE DUMMY_MOD_MAKE_RESULT)
+execute_process(COMMAND make -C ${KERNELDIR_BUILD} M=${DUMMY_MODULE_DIR} RESULT_VARIABLE DUMMY_MOD_MAKE_RESULT)
 if (DUMMY_MOD_MAKE_RESULT EQUAL 0)
 else()
     message(FATAL_ERROR "Build dummy module failed. This is likely due to a wrong kernel source directory was provided.")
@@ -105,11 +115,11 @@ list(TRANSFORM DUMMY_MOD_COMPILE_OPTIONS STRIP)
 # -include option is hard to parse with REGEX so add them manually
 list(FILTER DUMMY_MOD_COMPILE_OPTIONS EXCLUDE REGEX "-Wp.*|-DKBUILD.*|-include|-D__KBUILD.*|-o|-c")
 # fix -I pathes
-list(TRANSFORM DUMMY_MOD_COMPILE_OPTIONS REPLACE "-I." "-I${KERNELDIR}" OUTPUT_VARIABLE COMMON_COMPILE_OPTIONS)
+list(TRANSFORM DUMMY_MOD_COMPILE_OPTIONS REPLACE "-I." "-I${KERNELDIR_CD}" OUTPUT_VARIABLE COMMON_COMPILE_OPTIONS)
 # add -include options
-list(APPEND COMMON_COMPILE_OPTIONS "SHELL:-include ${KERNELDIR}/include/linux/compiler-version.h")
-list(APPEND COMMON_COMPILE_OPTIONS "SHELL:-include ${KERNELDIR}/include/linux/kconfig.h")
-list(APPEND COMMON_COMPILE_OPTIONS "SHELL:-include ${KERNELDIR}/include/linux/compiler_types.h")
+list(APPEND COMMON_COMPILE_OPTIONS "SHELL:-include ${KERNELDIR_CD}/include/linux/compiler-version.h")
+list(APPEND COMMON_COMPILE_OPTIONS "SHELL:-include ${KERNELDIR_CD}/include/linux/kconfig.h")
+list(APPEND COMMON_COMPILE_OPTIONS "SHELL:-include ${KERNELDIR_CD}/include/linux/compiler_types.h")
 # By now COMMON_COMPILE_OPTIONS contains all the common compile options for every module source file.
 
 # exclude commpile options that are not understood by clangd
@@ -133,7 +143,7 @@ endforeach()
 # finally the custom target 'module' for actually building the module
 # thus, you build your module after cmake configuring with 'make module'
 set(MODULE_KO ${MODULE_NAME}.ko)
-set(KBUILD_CMD $(MAKE) -C ${KERNELDIR} modules M=${CMAKE_BINARY_DIR} src=${CMAKE_SOURCE_DIR})
+set(KBUILD_CMD $(MAKE) -C ${KERNELDIR_BUILD} modules M=${CMAKE_BINARY_DIR} src=${CMAKE_SOURCE_DIR})
 add_custom_command(OUTPUT ${MODULE_KO}
         COMMAND ${KBUILD_CMD}
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
