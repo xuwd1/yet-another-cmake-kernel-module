@@ -5,8 +5,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 
 
 # user options
-set(FULL_KERNEL_DIR "/home/david/repo/linux-arch-git" CACHE STRING "Path to full kernel source tree")
-set(HEADER_ONLY_KERNEL_DIR "/usr/lib/modules/6.4.1-arch1-1/build" CACHE STRING "Path to header-only kernel source tree") 
+set(FULL_KERNEL_DIR "" CACHE STRING "Path to full kernel source tree")
+set(HEADER_ONLY_KERNEL_DIR "" CACHE STRING "Path to header-only kernel source tree") 
 option(HEADER_BUILD "Use full kernel tree for compilation database and build with header-only kernel tree. \
                      If set ON, both FULL_KERNEL_DIR and HEADER_ONLY_KERNEL_DIR have to be provided, \
                      otherwise use HEADER_ONLY_KERNEL_DIR for both compilation database and building" ON)
@@ -20,6 +20,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if(HEADER_BUILD)
     if(${FULL_KERNEL_DIR} STREQUAL "")
         message(FATAL_ERROR "No full kernel source tree provided")
+    endif()
+    # probe for compile_commands.json under full kernel source tree
+    if(EXISTS ${FULL_KERNEL_DIR}/compile_commands.json)
+    else()
+        message(WARNING "No compile_commands.json found under full kernel source tree !!! \
+                         Language server may (definitely) NOT work well when navigating under the kernel source tree. \
+                         To generate it, first build a kernel image from the full kernel source, \
+                         and run 'python /path/to/source/scripts/clang-tools/gen_compile_commands.py'")
     endif()
     if(${HEADER_ONLY_KERNEL_DIR} STREQUAL "")
         message(FATAL_ERROR "No header-only kernel source tree provided")
