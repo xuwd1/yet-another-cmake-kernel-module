@@ -36,6 +36,9 @@ cmake .. <OPTIONS>
 available `<OPTIONS>` are:
 
 - `-HEADER_BUILD=ON|OFF` : Whether to use full kernel tree for compilation database and build with header-only kernel tree. If set ON, both FULL_KERNEL_DIR and HEADER_ONLY_KERNEL_DIR have to be provided, otherwise use HEADER_ONLY_KERNEL_DIR for both compilation database and building. **Required, default=ON**
+
+Please note that if no compile_commands.json can be found under the full kernel source tree, language server may (definitely) NOT work well when navigating under the kernel source tree. Thus, when using `-HEADER_BUILD=ON`, make sure you have generated it, by first build a kernel image from the full kernel source, and run `python /path/to/source/scripts/clang-tools/gen_compile_commands.py` under the full kernel source tree
+
 - `-DFULL_KERNEL_DIR=/path/to/full/kernel/source` : The full kernel source tree location. **Optional if -HEADER_BUILD=OFF and otherwise required**
 - `-DHEADER_ONLY_KERNEL_DIR=/path/to/header/only/kernel/source` : The kernel header tree location. **Required**
 - `-DCLANGD=ON|OFF` : Wether to exclude the compile options that are not understood by `clangd`. **Optional but RECOMMENDED and default=ON**
