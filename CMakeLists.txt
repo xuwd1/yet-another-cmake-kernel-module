@@ -57,7 +57,7 @@ list(APPEND MODULE_LIB_SRC)
 list(APPEND ALL_MODULE_SRC ${MODULE_SRC} ${MODULE_LIB_SRC})
 # first we generate the obj-m string 
 set(KBUILD_OBJ_M_STR "obj-m := ")
-string(REGEX REPLACE "\.c" "" MODULE_NAME ${MODULE_SRC})
+string(REGEX REPLACE "\\.c" "" MODULE_NAME ${MODULE_SRC})
 string(CONCAT MODULE_OBJ_NAME ${MODULE_NAME} ".o")
 string(CONCAT KBUILD_OBJ_M_STR ${KBUILD_OBJ_M_STR} ${MODULE_OBJ_NAME} "\n")
 
