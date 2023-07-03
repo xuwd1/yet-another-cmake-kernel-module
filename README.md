@@ -12,6 +12,8 @@ It's different from the existing works that either:
 
 This was made possible simply by generating and building a dummy module at cmake configuring time to get the compile options that Kbuild system emitted and instructing cmake to use similar compile options for generating the compilation database.
 
+A new feature introduced in this template project is to control whether to use a header-only kernel tree for actual building of the module while using a given full kernel tree for compilation database generation. This was designed considering that it could be very convenient if we can check the kernel source implementations while browsing the headers.
+
 This repository was inspired by [cmake-kernel-module](https://github.com/enginning/cmake-kernel-module)
 
 ## Usage
@@ -33,10 +35,10 @@ cmake .. <OPTIONS>
 ```
 available `<OPTIONS>` are:
 
-- `-DFULLTREE=ON|OFF` : Wether to use the following specified full kernel source tree for building. **Required**
-- `-DFULL_KERNEL_DIR=/path/to/full/kernel/source` : The full kernel source tree location. **Optional if -DFULLTREE=OFF and otherwise required**
-- `-DHEADER_ONLY_KERNEL_DIR=/path/to/header/only/kernel/source` : The kernel header tree location. **Optional if -DFULLTREE=ON and otherwise required**
-- `-DCLANGD=ON|OFF` : Wether to exclude the compile options that are not understood by `clangd`. **Optional but RECOMMENDED=ON**
+- `-HEADER_BUILD=ON|OFF` : Whether to use full kernel tree for compilation database and build with header-only kernel tree. If set ON, both FULL_KERNEL_DIR and HEADER_ONLY_KERNEL_DIR have to be provided, otherwise use HEADER_ONLY_KERNEL_DIR for both compilation database and building. **Required, default=ON**
+- `-DFULL_KERNEL_DIR=/path/to/full/kernel/source` : The full kernel source tree location. **Optional if -HEADER_BUILD=OFF and otherwise required**
+- `-DHEADER_ONLY_KERNEL_DIR=/path/to/header/only/kernel/source` : The kernel header tree location. **Required**
+- `-DCLANGD=ON|OFF` : Wether to exclude the compile options that are not understood by `clangd`. **Optional but RECOMMENDED and default=ON**
 
 
 After this step:
