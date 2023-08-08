@@ -48,29 +48,29 @@ endif()
 
 ### start of Kbuild generation ###
 # specify module source files here
-# MODULE_SRC: the main module source file. Its name is assumed to be the module's name and it would correspond to the 'obj-m' in the Kbuild file
-# MODULE_LIB_SRC: other source files that the module uses. They would correspond to the '${MODULE_NAME}-y' in the Kbuild file.
-set(MODULE_SRC hello.c)
-list(APPEND MODULE_LIB_SRC)
+# MODULE_NAME: the module name. It would correspond to the '$obj-m' in the Kbuild file.
+# MODULE_SRC_LIST: source files that the module uses. They would correspond to the '${MODULE_NAME}-y' in the Kbuild file.
+
+set(MODULE_NAME yackm)
+list(APPEND MODULE_SRC_LIST hello.c)
 
 
-list(APPEND ALL_MODULE_SRC ${MODULE_SRC} ${MODULE_LIB_SRC})
+list(APPEND ALL_MODULE_SRC ${MODULE_SRC_LIST})
 # first we generate the obj-m string 
 set(KBUILD_OBJ_M_STR "obj-m := ")
-string(REGEX REPLACE "\\.c" "" MODULE_NAME ${MODULE_SRC})
 string(CONCAT MODULE_OBJ_NAME ${MODULE_NAME} ".o")
 string(CONCAT KBUILD_OBJ_M_STR ${KBUILD_OBJ_M_STR} ${MODULE_OBJ_NAME} "\n")
 
 
 # next we generate the '${MODULE_NAME}'-y string
-if(MODULE_LIB_SRC)
-    string(CONCAT KBUILD_OBJ_Y_STR ${MODULE_NAME} "-y := ")
-    foreach(LIB_SRCFILE ${MODULE_LIB_SRC})
-        string(REGEX REPLACE "\.c" "" TU_NAME ${LIB_SRCFILE})
-        string(CONCAT LIB_OBJ_NAME ${TU_NAME} ".o")
-        string(CONCAT KBUILD_OBJ_Y_STR ${KBUILD_OBJ_Y_STR} ${LIB_OBJ_NAME} " ")
-    endforeach()
-endif()
+
+string(CONCAT KBUILD_OBJ_Y_STR ${MODULE_NAME} "-y := ")
+foreach(LIB_SRCFILE ${MODULE_SRC_LIST})
+    string(REGEX REPLACE "\.c" "" TU_NAME ${LIB_SRCFILE})
+    string(CONCAT LIB_OBJ_NAME ${TU_NAME} ".o")
+    string(CONCAT KBUILD_OBJ_Y_STR ${KBUILD_OBJ_Y_STR} ${LIB_OBJ_NAME} " ")
+endforeach()
+
 string(CONCAT KBUILD_OBJ_Y_STR ${KBUILD_OBJ_Y_STR} "\n")
 # the generated Kbuild file will be at ${CMAKE_SOURCE_DIR}/Kbuild
 set(GENERATED_KBUILD_FILE ${CMAKE_SOURCE_DIR}/Kbuild)
