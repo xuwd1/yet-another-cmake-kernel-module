@@ -9,7 +9,7 @@ set(FULL_KERNEL_DIR "" CACHE STRING "Path to full kernel source tree")
 set(HEADER_ONLY_KERNEL_DIR "" CACHE STRING "Path to header-only kernel source tree") 
 option(HEADER_BUILD "Use full kernel tree for compilation database and build with header-only kernel tree. \
                      If set ON, both FULL_KERNEL_DIR and HEADER_ONLY_KERNEL_DIR have to be provided, \
-                     otherwise use HEADER_ONLY_KERNEL_DIR for both compilation database and building" ON)
+                     otherwise use HEADER_ONLY_KERNEL_DIR for both compilation database and building" OFF)
 option(CLANGD "Remove compile flags that are not understood by clangd" ON)
 
 # tell cmake to generate JSON compilation database
@@ -159,3 +159,5 @@ add_custom_command(OUTPUT ${MODULE_KO}
 add_custom_target(module ALL DEPENDS ${MODULE_KO})
 # custom target 'module=clean' for cleaning and deleting the generated Kbuild
 add_custom_target(module-clean COMMAND ${KBUILD_CMD} clean && rm ${GENERATED_KBUILD_FILE})
+
+add_custom_target(module-xz COMMAND xz -T1 ${MODULE_KO} DEPENDS ${MODULE_KO} VERBATIM)
